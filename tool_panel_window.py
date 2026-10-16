@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""
+The Map's Edge Tool Panel window: every tool from registry.py as a button,
+grouped as in the Extensions > Map's Edge Tools menu. Each section is a tab,
+and each group a tab under it, so every group is one click away and none
+sits below the bottom edge of the window. A tool with settings has its
+fields on the same row as its button.
+
+Launched detached by tool_panel.py, so it can stay open beside Inkscape.
+It never touches the SVG file. A button click writes a request file and
+asks the running Inkscape (over D-Bus) to run panel_run.py, which runs the
+tool on the live document and selection. Tools that open a window of their
+own are started through their own Inkscape action instead.
+"""
+import json
+import os
+import sys
+import time
+import warnings
+warnings.filterwarnings('ignore')  # before the gi import
+
+os.environ.setdefault('NO_AT_BRIDGE', '1')
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+# D-Bus helpers are reused from Expanded Groups, not copied.
+sys.path.insert(1, os.path.join(os.path.dirname(HERE), 'ExpandedGroups'))
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib
+
+import registry
+from expanded_groups_dbus import run_extension_live, quiet_stderr
+
+VERSION = "1.1.0"
+
+
+class ToolPanel:
+    def __init__(self):
+        self.last_focus_mtime = self._focus_mtime()
+        with quiet_stderr():
+            self.build()
+
+    def build(self):
+        win = Gtk.Window(title=f"Map's Edge Tools v{VERSION}")
+        win.set_default_size(360, 600)
+        win.set_keep_above(True)
+        win.connect("destroy", self.on_destroy)
+        self.window = win
+
+        try:
+            with open(registry.PANEL_PID_PATH, 'w') as f:
+                f.write(str(os.getpid()))
+        except OSError:
+            pass
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        win.add(outer)
+
+        sections = Gtk.Notebook()
+        sections.set_margin_top(8)
+        outer.pack_start(sections, True, True, 0)
+
+        group_tabs = {}
+        for sec_name, group_name, tools in registry.LAYOUT:
+            if sec_name not in group_tabs:
+                groups = Gtk.Notebook()
+                groups.set_margin_top(10)
+                group_tabs[sec_name] = groups
+                sections.append_page(groups, Gtk.Label(label=sec_name))
+
+            rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            rows.set_margin_top(16)
+            rows.set_margin_bottom(16)
+            rows.set_margin_start(12)
+            rows.set_margin_end(12)
+            widths = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
+            for tool in tools:
+                rows.pack_start(self.tool_row(tool, widths), False, False, 0)
+
+            # A group taller than the window scrolls. The scrollbar is always
+            # drawn when it is needed, not only while the pointer is over it.
+            scroll = Gtk.ScrolledWindow()
+            scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            scroll.set_overlay_scrolling(False)
+            scroll.add(rows)
+            group_tabs[sec_name].append_page(scroll, Gtk.Label(label=group_name))
+
+        self.statusbar = Gtk.Statusbar()
+        self.status_ctx = self.statusbar.get_context_id("status")
+        outer.pack_start(self.statusbar, False, False, 0)
+
+        win.show_all()
+        GLib.timeout_add(500, self.poll_focus)
+
+    def tool_row(self, tool, widths):
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        button = Gtk.Button(label=tool.label)
+        button.get_child().set_xalign(0)
+        if tool.tip:
+            button.set_tooltip_text(tool.tip)
+        # As wide as the longest label in its group, not as wide as the window.
+        widths.add_widget(button)
+        row.pack_start(button, False, False, 0)
+
+        readers = {}
+        for s in tool.settings:
+            if s.kind == 'choice':
+                widget = Gtk.ComboBoxText()
+                for value, text in s.choices:
+                    widget.append(value, text)
+                widget.set_active_id(s.default)
+                readers[s.name] = widget.get_active_id
+            else:
+                adj = Gtk.Adjustment(value=s.default, lower=s.low, upper=s.high,
+                                     step_increment=s.step, page_increment=s.step * 10)
+                widget = Gtk.SpinButton(adjustment=adj, digits=s.digits)
+                widget.set_width_chars(6)
+                readers[s.name] = (widget.get_value_as_int if s.kind == 'int'
+                                   else widget.get_value)
+            widget.set_tooltip_text(s.label)
+            row.pack_start(widget, False, False, 0)
+
+        button.connect("clicked", lambda _b: self.run(tool, readers))
+        return row
+
+    def show_status(self, msg):
+        self.statusbar.pop(self.status_ctx)
+        self.statusbar.push(self.status_ctx, msg)
+
+    def run(self, tool, readers):
+        if tool.action:
+            ok = run_extension_live(tool.action)
+        else:
+            # A spin button only takes typed text into its value on Enter or
+            # focus loss, so make it do that before reading.
+            focus = self.window.get_focus()
+            if isinstance(focus, Gtk.SpinButton):
+                focus.update()
+            request = {'tool': tool.key, 'time': time.time(),
+                       'settings': {name: read() for name, read in readers.items()}}
+            with open(registry.REQUEST_PATH, 'w') as f:
+                json.dump(request, f)
+            ok = run_extension_live(registry.RUN_ACTION)
+        self.show_status(f"Ran: {tool.label}" if ok
+                         else f"Could not reach Inkscape for: {tool.label}")
+
+    @staticmethod
+    def _focus_mtime():
+        try:
+            return os.stat(registry.PANEL_FOCUS_REQUEST_PATH).st_mtime_ns
+        except OSError:
+            return 0
+
+    def poll_focus(self):
+        mtime = self._focus_mtime()
+        if mtime != self.last_focus_mtime:
+            self.last_focus_mtime = mtime
+            self.window.present()
+        return True
+
+    def on_destroy(self, *args):
+        try:
+            os.remove(registry.PANEL_PID_PATH)
+        except OSError:
+            pass
+        Gtk.main_quit()
+
+
+def main():
+    ToolPanel()
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
