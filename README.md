@@ -25,6 +25,7 @@ The panel runs the tools from their own folders. Install the ones you want, with
 | `inkstitch-quickset` | [inkstitch-quickset](https://github.com/theRoadLessOrdinary/inkstitch-quickset) |
 | `LayerGroupManager` | [layer-group-manager](https://github.com/theRoadLessOrdinary/layer-group-manager) |
 | `branch-out-and-back` | [branch-out-and-back](https://github.com/theRoadLessOrdinary/branch-out-and-back) |
+| `snowflake-stitching` | [snowflake-stitching](https://github.com/theRoadLessOrdinary/snowflake-stitching) |
 | `circular-arc-nodes` | [circular-arc-nodes](https://github.com/theRoadLessOrdinary/circular-arc-nodes) |
 | `cut-along-shape` | [cut-along-shape](https://github.com/theRoadLessOrdinary/cut-along-shape) |
 | `divide-stroke-parallel` | [divide-stroke-parallel](https://github.com/theRoadLessOrdinary/divide-stroke-parallel) |

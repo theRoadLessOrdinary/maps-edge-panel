@@ -148,6 +148,12 @@ LAYOUT = [
              tip='Node tool: select the end node of a branch and the trunk node it attaches '
                  'to. Folds the branch into the trunk so both stitch as one line: out along '
                  'the branch, back the same way, then on along the trunk.'),
+        Tool('snowflake', 'Snowflake Stitching', 'snowflake-stitching',
+             'snowflake_stitching', 'SnowflakeStitching',
+             settings=[Setting('gap', 'Join gap mm', 'float', 0.1, 0.0, 5.0, 0.05, 2)],
+             tip='Select a branching path (or several). Replaces it with one continuous path '
+                 'that covers every line, doubling back over the least length possible. '
+                 'Ends and crossings closer than the join gap count as touching.'),
     ]),
     ('Embroidery', 'Info', [
         Tool('stitch_count', 'Stitch Count Label', 'stitch-count-label',
