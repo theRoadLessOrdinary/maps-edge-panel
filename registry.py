@@ -174,9 +174,12 @@ LAYOUT = [
                tip='Select objects or groups in the order they should sew. Gives them the next '
                    'numbers in the stitch order. Nothing is moved in the layers.'),
         _order('order_insert', 'Insert into Stitch Order', 'insert',
-               settings=[Setting('position', 'Position', 'int', 1, 1, 9999)],
-               tip='Puts the selected objects or groups into the stitch order at this position, '
-                   'in the order you selected them. Numbers after them move up.'),
+               settings=[Setting('place', 'Where', 'choice', 'position', choices=[
+                   ('start', 'Beginning'), ('end', 'End'), ('position', 'Position')]),
+                         Setting('position', 'Position', 'int', 1, 1, 9999)],
+               tip='Puts the selected objects or groups into the stitch order at the beginning, '
+                   'at the end, or at the position number (used for Position), in the order '
+                   'you selected them. Numbers after them move up.'),
         _order('order_remove', 'Remove from Stitch Order', 'remove',
                tip='Takes the stitch order number off the selected objects or groups.'),
         _order('order_clear', 'Clear Stitch Order', 'clear',
@@ -262,6 +265,13 @@ LAYOUT = [
                  'select a group again, rename it or remove it.'),
         Tool('groups_assign', 'Assign To Group...', action='trlo.assign-group.noprefs',
              tip='Adds the selected objects to a named Expanded Group.'),
+    ]),
+    ('General', 'Inkscape', [
+        Tool('restart_inkscape', 'Restart Inkscape', 'restart-inkscape',
+             'restart_inkscape', 'RestartInkscape',
+             tip='Closes Inkscape and opens it again with the active file, for example to '
+                 'load changed extensions. Inkscape still asks about unsaved changes; '
+                 'Cancel there stops the restart.'),
     ]),
     ('General', 'Export', [
         # No tip: private to the author.
