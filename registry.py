@@ -67,6 +67,16 @@ def _layer(key, label, option, tip):
                 fixed={option: True}, tip=tip)
 
 
+ORDER = 'stitch-order'
+UNTAGGED = Setting('untagged', 'Unnumbered', 'choice', 'after', choices=[
+    ('after', 'Sew after'), ('before', 'Sew before'), ('omit', 'Leave out')])
+
+
+def _order(key, label, action, tip, settings=()):
+    return Tool(key, label, ORDER, 'stitch_order', 'StitchOrder',
+                settings=settings, fixed={'action': action}, tip=tip)
+
+
 # (section, group, [tools]) in the order shown. section is the top-level
 # tab, group the tab under it. Every tool has a tip: what to select and what
 # the button then does. It is shown as the button's tooltip.
@@ -154,6 +164,31 @@ LAYOUT = [
              tip='Select a branching path (or several). Replaces it with one continuous path '
                  'that covers every line, doubling back over the least length possible. '
                  'Ends and crossings closer than the join gap count as touching.'),
+    ]),
+    ('Embroidery', 'Stitch Order', [
+        _order('order_add', 'Add to Stitch Order', 'add',
+               tip='Select objects or groups in the order they should sew. Gives them the next '
+                   'numbers in the stitch order. Nothing is moved in the layers.'),
+        _order('order_insert', 'Insert into Stitch Order', 'insert',
+               settings=[Setting('position', 'Position', 'int', 1, 1, 9999)],
+               tip='Puts the selected objects or groups into the stitch order at this position, '
+                   'in the order you selected them. Numbers after them move up.'),
+        _order('order_remove', 'Remove from Stitch Order', 'remove',
+               tip='Takes the stitch order number off the selected objects or groups.'),
+        _order('order_clear', 'Clear Stitch Order', 'clear',
+               tip='Takes the stitch order number off every object in the document.'),
+        _order('order_list', 'List Stitch Order', 'list',
+               tip='Shows every numbered object or group in stitch order.'),
+        _order('order_preview', 'Preview in Stitch Order', 'preview',
+               settings=[UNTAGGED],
+               tip='Opens the Ink/Stitch simulator on a copy arranged in stitch order. '
+                   'The document is not changed.'),
+        _order('order_export', 'Export in Stitch Order', 'export',
+               settings=[Setting('format', 'Format', 'choice', 'dst', choices=[
+                   ('dst', 'DST'), ('exp', 'EXP'), ('jef', 'JEF'), ('pes', 'PES'),
+                   ('vp3', 'VP3'), ('xxx', 'XXX')]), UNTAGGED],
+               tip='Saves an embroidery file sewn in stitch order next to the SVG, with the same '
+                   'name. The SVG must be saved first. The document is not changed.'),
     ]),
     ('Embroidery', 'Info', [
         Tool('stitch_count', 'Stitch Count Label', 'stitch-count-label',
