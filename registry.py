@@ -164,6 +164,12 @@ LAYOUT = [
              tip='Select a branching path (or several). Replaces it with one continuous path '
                  'that covers every line, doubling back over the least length possible. '
                  'Ends and crossings closer than the join gap count as touching.'),
+        Tool('snowflake_explode', 'Snowflake Explode', 'snowflake-stitching',
+             'snowflake_explode', 'SnowflakeExplode',
+             settings=[Setting('separation', 'Separation mm', 'float', 0.15, 0.01, 20.0, 0.05, 2)],
+             tip='Select a Snowflake Stitching result. Where the route runs over the same line '
+                 'more than once, each pass moves into its own lane, side by side, so the route '
+                 'can be followed by eye. Changes the path; for looking, not for sewing.'),
     ]),
     ('Embroidery', 'Stitch Order', [
         _order('order_add', 'Add to Stitch Order', 'add',
