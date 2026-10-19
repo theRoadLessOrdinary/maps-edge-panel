@@ -11,6 +11,9 @@ It never touches the SVG file. A button click writes a request file and
 asks the running Inkscape (over D-Bus) to run panel_run.py, which runs the
 tool on the live document and selection. Tools that open a window of their
 own are started through their own Inkscape action instead.
+
+The launcher passes Inkscape's process id as the first argument; the window
+closes itself once that process has ended.
 """
 import json
 import os
@@ -33,11 +36,12 @@ from gi.repository import Gtk, GLib
 import registry
 from expanded_groups_dbus import run_extension_live, quiet_stderr
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 
 class ToolPanel:
-    def __init__(self):
+    def __init__(self, inkscape_pid=None):
+        self.inkscape_pid = inkscape_pid
         self.last_focus_mtime = self._focus_mtime()
         with quiet_stderr():
             self.build()
@@ -153,7 +157,21 @@ class ToolPanel:
         except OSError:
             return 0
 
+    def inkscape_gone(self):
+        if self.inkscape_pid is None:
+            return False
+        try:
+            os.kill(self.inkscape_pid, 0)
+        except ProcessLookupError:
+            return True
+        except OSError:
+            return False
+        return False
+
     def poll_focus(self):
+        if self.inkscape_gone():
+            self.window.destroy()
+            return False
         mtime = self._focus_mtime()
         if mtime != self.last_focus_mtime:
             self.last_focus_mtime = mtime
@@ -169,7 +187,11 @@ class ToolPanel:
 
 
 def main():
-    ToolPanel()
+    try:
+        inkscape_pid = int(sys.argv[1])
+    except (IndexError, ValueError):
+        inkscape_pid = None
+    ToolPanel(inkscape_pid)
     Gtk.main()
 
 

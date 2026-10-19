@@ -6,6 +6,12 @@ tool_panel_window.py as a fully detached process and returns at once, so
 Inkscape is not blocked while the panel stays open. If a panel is already
 open, it asks that one to come to the front instead.
 
+The panel is given Inkscape's process id and closes itself when that
+process ends, so it does not outlive Inkscape. Inkscape does not start
+extensions as its own direct children (the parent can be process 1), so the
+id is found by name: first among this script's ancestors, then among all
+processes (in the Flatpak sandbox that is the one Inkscape).
+
 Same launch scheme as ExpandedGroups/expanded_groups.py (double fork, PID
 file, focus request file). It never imports gi, because importing gi writes
 a warning to stderr and Inkscape shows a dialog for any stderr output.
@@ -42,6 +48,35 @@ def request_panel_focus():
         f.write(str(time.time()))
 
 
+def _proc_stat(pid):
+    """(name, parent pid) of a process, from /proc, or None."""
+    try:
+        with open(f'/proc/{pid}/stat') as f:
+            data = f.read()
+    except OSError:
+        return None
+    name = data[data.index('(') + 1:data.rindex(')')]
+    return name, int(data[data.rindex(')') + 2:].split()[1])
+
+
+def find_inkscape_pid():
+    pid = os.getppid()
+    while pid > 1:
+        stat = _proc_stat(pid)
+        if stat is None:
+            break
+        if stat[0].startswith('inkscape'):
+            return pid
+        pid = stat[1]
+    found = []
+    for entry in os.listdir('/proc'):
+        if entry.isdigit():
+            stat = _proc_stat(int(entry))
+            if stat and stat[0].startswith('inkscape'):
+                found.append(int(entry))
+    return min(found) if found else None
+
+
 def spawn_detached(argv):
     """Double-fork so the panel has no parent tracking it (see the same
     function in ExpandedGroups/expanded_groups.py for the full reasoning)."""
@@ -65,7 +100,11 @@ class ToolPanelLauncher(inkex.EffectExtension):
             request_panel_focus()
             return
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        spawn_detached([os.path.join(script_dir, 'tool_panel_window.py')])
+        argv = [os.path.join(script_dir, 'tool_panel_window.py')]
+        inkscape_pid = find_inkscape_pid()
+        if inkscape_pid is not None:
+            argv.append(str(inkscape_pid))
+        spawn_detached(argv)
 
 
 if __name__ == '__main__':
