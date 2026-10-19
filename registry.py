@@ -68,8 +68,6 @@ def _layer(key, label, option, tip):
 
 
 ORDER = 'stitch-order'
-UNTAGGED = Setting('untagged', 'Unnumbered', 'choice', 'after', choices=[
-    ('after', 'Sew after'), ('before', 'Sew before'), ('omit', 'Leave out')])
 
 
 def _order(key, label, action, tip, settings=()):
@@ -186,15 +184,15 @@ LAYOUT = [
         _order('order_list', 'List Stitch Order', 'list',
                tip='Shows every numbered object or group in stitch order.'),
         _order('order_preview', 'Preview in Stitch Order', 'preview',
-               settings=[UNTAGGED],
                tip='Opens the Ink/Stitch simulator on a copy arranged in stitch order. '
-                   'The document is not changed.'),
+                   'Objects without a number are left out. The document is not changed.'),
         _order('order_export', 'Export in Stitch Order', 'export',
                settings=[Setting('format', 'Format', 'choice', 'dst', choices=[
                    ('dst', 'DST'), ('exp', 'EXP'), ('jef', 'JEF'), ('pes', 'PES'),
-                   ('vp3', 'VP3'), ('xxx', 'XXX')]), UNTAGGED],
+                   ('vp3', 'VP3'), ('xxx', 'XXX'), ('svg', 'SVG')])],
                tip='Saves an embroidery file sewn in stitch order next to the SVG, with the same '
-                   'name. The SVG must be saved first. The document is not changed.'),
+                   'name. Objects without a number are left out. The SVG must be saved first. '
+                   'The document is not changed.'),
     ]),
     ('Embroidery', 'Info', [
         Tool('stitch_count', 'Stitch Count Label', 'stitch-count-label',
@@ -203,6 +201,10 @@ LAYOUT = [
                  'and writes the total as text just above and to the left of the selection.'),
     ]),
     ('General', 'Paths', [
+        Tool('split_fill_outline', 'Split Fill and Outline', 'split-fill-outline',
+             'split_fill_outline', 'SplitFillOutline',
+             tip='Select objects or groups. Duplicates each one: outline only on the copy on top, '
+                 'fill only on the bottom.'),
         Tool('divide_stroke', 'Divide Stroke', 'divide-stroke-parallel',
              'divide_stroke_parallel', 'DivideStrokeParallel',
              settings=[Setting('n', 'Paths', 'int', 2, 2, 100, 1, 0)],
