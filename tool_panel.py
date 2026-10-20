@@ -17,6 +17,7 @@ file, focus request file). It never imports gi, because importing gi writes
 a warning to stderr and Inkscape shows a dialog for any stderr output.
 """
 import os
+import warnings
 import sys
 import time
 
@@ -80,6 +81,9 @@ def find_inkscape_pid():
 def spawn_detached(argv):
     """Double-fork so the panel has no parent tracking it (see the same
     function in ExpandedGroups/expanded_groups.py for the full reasoning)."""
+    # Python warns about fork() in a multi-threaded process; Inkscape would
+    # show that warning in a dialog that has to be dismissed.
+    warnings.simplefilter('ignore')
     pid = os.fork()
     if pid == 0:
         os.setsid()
