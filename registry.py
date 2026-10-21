@@ -83,7 +83,7 @@ LAYOUT = [
         Tool('rungs', 'Ladder Rungs', SATIN, 'edit_ladder_rungs', 'EditLadderRungs',
              settings=[Setting('mode', 'Mode', 'choice', 'add',
                                choices=[('add', 'Add'), ('decimate', 'Decimate')])],
-             tip='Select one ladder (two rails plus rungs) or two separate rail paths. '
+             tip='Select one or more ladders (two rails plus rungs), and/or separate rail paths in pairs. Shift+click rails in order: 1 and 2 become one ladder, 3 and 4 the next. '
                  'Add: builds the rungs, or when rungs exist puts a new rung between each pair. '
                  'Decimate: removes every other rung. The rungs at each end are left alone.'),
         Tool('angle_rungs', 'Angle Rungs', SATIN, 'angle_rungs', 'AngleRungs',
