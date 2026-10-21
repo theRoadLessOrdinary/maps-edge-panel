@@ -31,12 +31,16 @@ sys.path.insert(1, os.path.join(os.path.dirname(HERE), 'ExpandedGroups'))
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, Gdk, GLib
+
+# Use Inkscape's window class so the taskbar groups this panel under the Inkscape icon
+GLib.set_prgname('org.inkscape.Inkscape')
+Gdk.set_program_class('Inkscape')
 
 import registry
 from expanded_groups_dbus import run_extension_live, quiet_stderr
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 
 class ToolPanel:
