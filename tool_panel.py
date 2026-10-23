@@ -27,6 +27,10 @@ import inkex
 
 from registry import PANEL_PID_PATH, PANEL_FOCUS_REQUEST_PATH
 
+# The Groups tab shows Expanded Groups' list; its document reader lives there.
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ExpandedGroups'))
+from expanded_groups_data import write_snapshot, EMBED_SNAPSHOT_PATH
+
 
 def panel_already_running():
     """True if a panel process is alive and holding PANEL_PID_PATH. A PID
@@ -100,6 +104,11 @@ def spawn_detached(argv):
 
 class ToolPanelLauncher(inkex.EffectExtension):
     def effect(self):
+        # Fresh groups for the Groups tab, whether the window is new or already open.
+        try:
+            write_snapshot(self.svg, EMBED_SNAPSHOT_PATH)
+        except OSError:
+            pass
         if panel_already_running():
             request_panel_focus()
             return

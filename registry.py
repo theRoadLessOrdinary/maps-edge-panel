@@ -16,6 +16,9 @@ import tempfile
 
 EXTENSIONS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# The (section, group) tab that shows the Expanded Groups list instead of buttons.
+GROUPS_TAB = ('General', 'Groups')
+
 # How the panel window hands one request to the dispatcher.
 REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_request.json')
 REQUEST_MAX_AGE = 15.0  # seconds; an older request is ignored
@@ -28,10 +31,12 @@ PANEL_FOCUS_REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_
 
 class Setting:
     """One value the user sets on the panel before running a tool.
-    kind: 'float', 'int' or 'choice' (choices = [(value, label), ...])."""
+    kind: 'float', 'int' or 'choice' (choices = [(value, label), ...]).
+    show_when: (setting name, values) to show it only while that choice
+    setting is one of those values."""
 
     def __init__(self, name, label, kind, default, low=None, high=None,
-                 step=1.0, digits=0, choices=None):
+                 step=1.0, digits=0, choices=None, show_when=None):
         self.name = name
         self.label = label
         self.kind = kind
@@ -41,6 +46,7 @@ class Setting:
         self.step = step
         self.digits = digits
         self.choices = choices or []
+        self.show_when = show_when
 
 
 class Tool:
@@ -58,6 +64,7 @@ class Tool:
 
 
 SATIN = 'rung-rail-satin'
+ROUTE = 'route-satin-group'
 QUICK = 'inkstitch-quickset'
 LAYERS = 'LayerGroupManager'
 
@@ -82,15 +89,19 @@ LAYOUT = [
     ('Embroidery', 'Satin', [
         Tool('rungs', 'Ladder Rungs', SATIN, 'edit_ladder_rungs', 'EditLadderRungs',
              settings=[Setting('mode', 'Mode', 'choice', 'add',
-                               choices=[('add', 'Add'), ('decimate', 'Decimate')])],
+                               choices=[('add', 'Add'), ('decimate', 'Decimate'), ('fit', 'Fit to rails'), ('remove', 'Remove all'),
+                                        ('angle', 'Angle'), ('number', 'Number subpaths'), ('unnumber', 'Remove numbers')]),
+                       Setting('angle', 'Degrees', 'float', 30.0, -80, 80, 1.0, 1,
+                               show_when=('mode', ('angle',)))],
              tip='Select one or more ladders (two rails plus rungs), and/or separate rail paths in pairs. Shift+click rails in order: 1 and 2 become one ladder, 3 and 4 the next. '
                  'Add: builds the rungs, or when rungs exist puts a new rung between each pair. '
-                 'Decimate: removes every other rung. The rungs at each end are left alone.'),
-        Tool('angle_rungs', 'Angle Rungs', SATIN, 'angle_rungs', 'AngleRungs',
-             settings=[Setting('angle', 'Degrees', 'float', 30.0, -80, 80, 1.0, 1)],
-             tip='Select one or more ladders. Sets every rung to this angle across the column. '
-                 '0 is square across, a positive angle leans clockwise. The angle replaces the '
-                 'current one, it is not added to it.'),
+                 'Decimate: removes every other rung. The rungs at each end are left alone. '
+                 'Fit to rails: trims or extends every rung so it ends 0.125 mm past each rail, keeping its position and angle. New rungs also end 0.125 mm past each rail. '
+                 'Where a column curls back on itself, rung ends reach at most halfway across the gap to the next turn. Leave at least 0.6 mm between turns.'
+                 ' Remove all: deletes every rung, keeping the two rails.'
+                 ' Angle: sets every rung to Degrees across the column (0 is square across, positive leans clockwise). '
+                 'Number subpaths: tiny numbers beside each subpath, from 1 in path order, in a layer Ink/Stitch ignores; number again after edits. '
+                 'Remove numbers: from the selection, or from everything when nothing is selected.'),
         Tool('add_rung', 'Add Rung at Node', SATIN, 'add_rung_at_node', 'AddRungAtNode',
              tip='Node tool: select one node on a rail to add a rung there, or two nodes on '
                  'the same rail to add a rung halfway between them.'),
@@ -106,6 +117,11 @@ LAYOUT = [
              tip='Select two or more ladders. Reverses rails where needed so the selection '
                  'stitches in one continuous direction, each object starting near where the '
                  'one before it ended.'),
+        Tool('route', 'Route Satin Group', ROUTE, 'route_satin_group', 'RouteSatinGroup',
+             tip='Select one group; each group inside it is a layer, routed on its own. Points each '
+                 'column\'s rails the same way so it ends nearest the next column\'s start. A move that '
+                 'would leave the shape or cross stitched work gets, in this order: a travel path, '
+                 'a new order within the layer, or a trim. Clears every trim in the group first. Run again, it redoes only from the first changed column.'),
         Tool('outset', 'Outset / Inset', SATIN, 'outset_satin', 'OutsetSatin',
              settings=[Setting('distance', 'Distance', 'float', 1.0, -1000, 1000, 0.1, 3)],
              tip='Select one or more ladders. Moves each rail away from the other by this '
@@ -259,13 +275,8 @@ LAYOUT = [
              tip='Select two or more layers or objects. The last one clicked is the target. '
                  'The others are stacked directly above it, in the order they were clicked.'),
     ]),
-    ('General', 'Groups', [
-        Tool('groups_browse', 'Browse Groups...', action='trlo.expanded-groups.noprefs',
-             tip='Opens the Expanded Groups window: the named groups in this document, to '
-                 'select a group again, rename it or remove it.'),
-        Tool('groups_assign', 'Assign To Group...', action='trlo.assign-group.noprefs',
-             tip='Adds the selected objects to a named Expanded Group.'),
-    ]),
+    # No buttons: this tab holds the Expanded Groups list itself (GROUPS_TAB).
+    ('General', 'Groups', []),
     ('General', 'Inkscape', [
         Tool('restart_inkscape', 'Restart Inkscape', 'restart-inkscape',
              'restart_inkscape', 'RestartInkscape',

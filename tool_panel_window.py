@@ -39,8 +39,10 @@ Gdk.set_program_class('Inkscape')
 
 import registry
 from expanded_groups_dbus import run_extension_live, quiet_stderr
+from expanded_groups_data import EMBED_SNAPSHOT_PATH
+from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 
 
 class ToolPanel:
@@ -78,6 +80,10 @@ class ToolPanel:
                 group_tabs[sec_name] = groups
                 sections.append_page(groups, Gtk.Label(label=sec_name))
 
+            if (sec_name, group_name) == registry.GROUPS_TAB:
+                group_tabs[sec_name].append_page(self.groups_list(), Gtk.Label(label=group_name))
+                continue
+
             rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             rows.set_margin_top(16)
             rows.set_margin_bottom(16)
@@ -102,6 +108,22 @@ class ToolPanel:
         win.show_all()
         GLib.timeout_add(500, self.poll_focus)
 
+    def groups_list(self):
+        """The Expanded Groups list, read from the snapshot tool_panel.py wrote."""
+        try:
+            with open(EMBED_SNAPSHOT_PATH) as f:
+                snap = json.load(f)
+        except (OSError, ValueError):
+            snap = {}
+        self.groups = ExpandedGroupsPanel(
+            snap.get('by_name', {}), snap.get('by_id', {}), snap.get('states', {}),
+            snap.get('stitch_order', []), None, snap.get('group_order', []),
+            snap.get('labels', {}), host_window=self.window, status=self.show_status,
+            snapshot_path=EMBED_SNAPSHOT_PATH)
+        box = self.groups.widget
+        box.set_margin_top(8)
+        return box
+
     def tool_row(self, tool, widths):
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         button = Gtk.Button(label=tool.label)
@@ -113,6 +135,7 @@ class ToolPanel:
         row.pack_start(button, False, False, 0)
 
         readers = {}
+        combos = {}
         for s in tool.settings:
             if s.kind == 'choice':
                 widget = Gtk.ComboBoxText()
@@ -120,6 +143,7 @@ class ToolPanel:
                     widget.append(value, text)
                 widget.set_active_id(s.default)
                 readers[s.name] = widget.get_active_id
+                combos[s.name] = widget
             else:
                 adj = Gtk.Adjustment(value=s.default, lower=s.low, upper=s.high,
                                      step_increment=s.step, page_increment=s.step * 10)
@@ -129,9 +153,22 @@ class ToolPanel:
                                    else widget.get_value)
             widget.set_tooltip_text(s.label)
             row.pack_start(widget, False, False, 0)
+            if s.show_when:
+                self.show_only_when(widget, combos[s.show_when[0]], s.show_when[1])
 
         button.connect("clicked", lambda _b: self.run(tool, readers))
         return row
+
+    @staticmethod
+    def show_only_when(widget, combo, values):
+        # Shown only while the combo holds one of values; no_show_all keeps
+        # the window's show_all from showing it anyway.
+        widget.set_no_show_all(True)
+
+        def sync(_c=None):
+            widget.set_visible(combo.get_active_id() in values)
+        combo.connect("changed", sync)
+        sync()
 
     def show_status(self, msg):
         self.statusbar.pop(self.status_ctx)
@@ -150,6 +187,11 @@ class ToolPanel:
                        'settings': {name: read() for name, read in readers.items()}}
             with open(registry.REQUEST_PATH, 'w') as f:
                 json.dump(request, f)
+            # The call below holds the panel until the tool finishes, so show
+            # that it is running first.
+            self.show_status(f"Running: {tool.label}...")
+            while Gtk.events_pending():
+                Gtk.main_iteration()
             ok = run_extension_live(registry.RUN_ACTION)
         self.show_status(f"Ran: {tool.label}" if ok
                          else f"Could not reach Inkscape for: {tool.label}")
