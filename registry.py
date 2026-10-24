@@ -62,8 +62,9 @@ class Setting:
 
 class Tool:
     def __init__(self, key, label, folder=None, module=None, cls=None,
-                 action=None, settings=(), fixed=None, tip=None):
+                 action=None, settings=(), fixed=None, tip=None, beside=False):
         self.key = key
+        self.beside = beside       # shown to the right of the tool before it, same row
         self.label = label
         self.folder = folder
         self.module = module
@@ -124,9 +125,12 @@ LAYOUT = [
                  'select the cut nodes on its rails in the Node tool. Splits the column into '
                  'separate satin columns at each cut. Or select only a column already in '
                  'separate pieces to make each piece its own satin column.'),
-        Tool('join_satin', 'Join Satin', SATIN, 'join_satin', 'JoinSatin',
+        Tool('join_satin', 'Join Satin', SATIN, 'join_satin', 'JoinSatin', beside=True,
              tip='Select two or more satin columns that meet end to end (rail end nodes on '
                  'top of each other). Joins them into one satin column, keeping all rungs.'),
+        Tool('center_line', 'Satin Center Line', SATIN, 'satin_center_line', 'SatinCenterLine',
+             tip='Select one or more satin columns. Draws a line down the middle of each, in '
+                 'the satin\'s own style, just under it in the stacking order. The satin is kept.'),
         Tool('normalize', 'Normalize Direction', SATIN, 'normalize_stitch_direction',
              'NormalizeStitchDirection',
              tip='Select two or more ladders. Reverses rails where needed so the selection '

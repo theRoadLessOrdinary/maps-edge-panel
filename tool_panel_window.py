@@ -42,7 +42,7 @@ from expanded_groups_dbus import run_extension_live, quiet_stderr, DBUS_NAME, DB
 from expanded_groups_data import EMBED_SNAPSHOT_PATH
 from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 
 def action_exists(name):
@@ -102,8 +102,13 @@ class ToolPanel:
             rows.set_margin_start(12)
             rows.set_margin_end(12)
             widths = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
+            row = None
             for tool in tools:
-                rows.pack_start(self.tool_row(tool, widths), False, False, 0)
+                if tool.beside and row is not None:
+                    self.tool_row(tool, widths, row)
+                else:
+                    row = self.tool_row(tool, widths)
+                    rows.pack_start(row, False, False, 0)
 
             # A group taller than the window scrolls. The scrollbar is always
             # drawn when it is needed, not only while the pointer is over it.
@@ -136,8 +141,11 @@ class ToolPanel:
         box.set_margin_top(8)
         return box
 
-    def tool_row(self, tool, widths):
-        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    def tool_row(self, tool, widths, row=None):
+        """A row with the tool's button and settings, or, given row, the
+        button and settings added to the right end of that row."""
+        if row is None:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         button = Gtk.Button(label=tool.label)
         button.get_child().set_xalign(0)
         if tool.tip:
