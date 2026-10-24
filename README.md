@@ -12,6 +12,7 @@ Menu: **Extensions > Map's Edge Tools > Tool Panel** (extension ID `maps_edge.to
 - A tool that has settings shows them on the same row as its button.
 - A setting needed by only some of a tool's modes is shown only while one of those modes is chosen (Ladder Rungs shows Degrees only for Angle).
 - While a tool runs, the status bar shows "Running: ...". The panel waits however long the tool takes.
+- Each run is one step in Edit > Undo History, named after the tool.
 - A button runs its tool on the current document and selection, as one undo step, the same as picking the tool from the menu.
 - Tools that open a window of their own are opened through Inkscape, the same as from the menu.
 - **General > Groups** holds the Expanded Groups list itself, with the same toolbar, clicks, drag and drop and right-click menu as the Expanded Groups window. It reads the document's groups when the panel opens. Its Refresh button reads them again, for example after switching documents or after editing groups some other way.
@@ -46,7 +47,9 @@ A button whose tool is not installed does nothing useful, so install the folders
 
 The window cannot edit the open document itself. When a button is pressed, the window writes a small request file (which tool, which settings) and asks the running Inkscape, over D-Bus, to run the hidden extension `maps_edge.panel_run`. Inkscape runs it on the current document and selection like any other extension. That script loads the requested tool's own code from its folder and runs it unchanged.
 
-`registry.py` holds the one list of tools: labels, groups, tooltips and settings. To add a tool to the panel, add one line there.
+Each tool has its own copy of that hidden extension in the `run` folder, named after the tool, so a step in Edit > Undo History reads "Ladder Rungs" or "Route Satin Group" rather than one shared name. If Inkscape hasn't loaded a tool's copy yet, the panel uses the shared `maps_edge.panel_run`.
+
+`registry.py` holds the one list of tools: labels, groups, tooltips and settings. To add a tool to the panel, add one line there, then run `make_run_inx.py` to update the `run` folder and restart Inkscape.
 
 ## Install
 

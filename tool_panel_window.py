@@ -31,18 +31,30 @@ sys.path.insert(1, os.path.join(os.path.dirname(HERE), 'ExpandedGroups'))
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, Gio, GLib
 
 # Use Inkscape's window class so the taskbar groups this panel under the Inkscape icon
 GLib.set_prgname('org.inkscape.Inkscape')
 Gdk.set_program_class('Inkscape')
 
 import registry
-from expanded_groups_dbus import run_extension_live, quiet_stderr
+from expanded_groups_dbus import run_extension_live, quiet_stderr, DBUS_NAME, DBUS_PATH
 from expanded_groups_data import EMBED_SNAPSHOT_PATH
 from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
+
+
+def action_exists(name):
+    """Whether the running Inkscape has this action (asked over D-Bus)."""
+    try:
+        conn = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        conn.call_sync(DBUS_NAME, DBUS_PATH, 'org.gtk.Actions', 'Describe',
+                       GLib.Variant('(s)', (name,)), None,
+                       Gio.DBusCallFlags.NONE, 5000, None)
+    except GLib.Error:
+        return False
+    return True
 
 
 class ToolPanel:
@@ -119,7 +131,7 @@ class ToolPanel:
             snap.get('by_name', {}), snap.get('by_id', {}), snap.get('states', {}),
             snap.get('stitch_order', []), None, snap.get('group_order', []),
             snap.get('labels', {}), host_window=self.window, status=self.show_status,
-            snapshot_path=EMBED_SNAPSHOT_PATH)
+            snapshot_path=EMBED_SNAPSHOT_PATH, group_styles=snap.get('group_styles', {}))
         box = self.groups.widget
         box.set_margin_top(8)
         return box
@@ -192,7 +204,13 @@ class ToolPanel:
             self.show_status(f"Running: {tool.label}...")
             while Gtk.events_pending():
                 Gtk.main_iteration()
-            ok = run_extension_live(registry.RUN_ACTION)
+            # The tool's own entry names the Undo History step after the tool.
+            # Until Inkscape is restarted after make_run_inx.py, use the
+            # shared one.
+            action = registry.run_action(tool.key)
+            if not action_exists(action):
+                action = registry.RUN_ACTION
+            ok = run_extension_live(action)
         self.show_status(f"Ran: {tool.label}" if ok
                          else f"Could not reach Inkscape for: {tool.label}")
 

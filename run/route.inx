@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+
+	<!-- Written by make_run_inx.py; edit registry.py instead. -->
+	<name>Route Satin Group</name>
+	<id>maps_edge.panel_run_route</id>
+
+	<effect needs-live-preview="false">
+		<object-type>all</object-type>
+		<effects-menu hidden="true" />
+	</effect>
+
+	<script>
+		<command location="inx" interpreter="python">../panel_run.py</command>
+	</script>
+
+</inkscape-extension>

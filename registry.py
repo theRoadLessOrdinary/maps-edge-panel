@@ -24,6 +24,17 @@ REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_request.json
 REQUEST_MAX_AGE = 15.0  # seconds; an older request is ignored
 RUN_ACTION = 'maps-edge.panel-run.noprefs'
 
+
+def run_id(key):
+    """Extension id of a tool's own dispatcher entry (run/<key>.inx, from
+    make_run_inx.py), so its Undo History entry carries the tool's name."""
+    return f'maps_edge.panel_run_{key}'
+
+
+def run_action(key):
+    # Inkscape turns an extension id into an action name with - for _.
+    return run_id(key).replace('_', '-') + '.noprefs'
+
 # Single-instance bookkeeping for the window (same scheme as Expanded Groups).
 PANEL_PID_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel.pid')
 PANEL_FOCUS_REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_focus_request')
@@ -111,7 +122,11 @@ LAYOUT = [
         Tool('cut_satin', 'Cut Satin', SATIN, 'cut_satin_at_nodes', 'CutSatinAtNodes',
              tip='Select a satin column plus a cut line or closed shape drawn across it, or '
                  'select the cut nodes on its rails in the Node tool. Splits the column into '
-                 'separate satin columns at each cut.'),
+                 'separate satin columns at each cut. Or select only a column already in '
+                 'separate pieces to make each piece its own satin column.'),
+        Tool('join_satin', 'Join Satin', SATIN, 'join_satin', 'JoinSatin',
+             tip='Select two or more satin columns that meet end to end (rail end nodes on '
+                 'top of each other). Joins them into one satin column, keeping all rungs.'),
         Tool('normalize', 'Normalize Direction', SATIN, 'normalize_stitch_direction',
              'NormalizeStitchDirection',
              tip='Select two or more ladders. Reverses rails where needed so the selection '
