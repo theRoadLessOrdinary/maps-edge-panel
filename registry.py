@@ -194,7 +194,7 @@ LAYOUT = [
         Tool('snowflake', 'Snowflake Stitching', 'snowflake-stitching',
              'snowflake_stitching', 'SnowflakeStitching',
              settings=[Setting('gap', 'Join gap mm', 'float', 0.1, 0.0, 5.0, 0.05, 2)],
-             tip='Select a branching path (or several). Replaces it with one continuous path '
+             tip='Select a branching path (or several, or groups; each group is routed on its own). Replaces it with one continuous path '
                  'that covers every line, doubling back over the least length possible. '
                  'Ends and crossings closer than the join gap count as touching.'),
         Tool('snowflake_explode', 'Snowflake Explode', 'snowflake-stitching',

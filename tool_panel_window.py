@@ -66,7 +66,7 @@ class ToolPanel:
 
     def build(self):
         win = Gtk.Window(title=f"Map's Edge Tools v{VERSION}")
-        win.set_default_size(360, 600)
+        win.set_default_size(430, 600)
         win.set_keep_above(True)
         win.connect("destroy", self.on_destroy)
         self.window = win
@@ -136,7 +136,8 @@ class ToolPanel:
             snap.get('by_name', {}), snap.get('by_id', {}), snap.get('states', {}),
             snap.get('stitch_order', []), None, snap.get('group_order', []),
             snap.get('labels', {}), host_window=self.window, status=self.show_status,
-            snapshot_path=EMBED_SNAPSHOT_PATH, group_styles=snap.get('group_styles', {}))
+            snapshot_path=EMBED_SNAPSHOT_PATH, group_styles=snap.get('group_styles', {}),
+            item_order=snap.get('item_order', {}))
         box = self.groups.widget
         box.set_margin_top(8)
         return box
