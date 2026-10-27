@@ -65,7 +65,7 @@ from expanded_groups_dbus import run_extension_live, quiet_stderr, DBUS_NAME, DB
 from expanded_groups_data import EMBED_SNAPSHOT_PATH
 from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 
 
 def action_exists(name):
@@ -100,6 +100,7 @@ class ToolPanel:
         except OSError:
             pass
 
+        self.setting_widgets = {}  # (tool key, setting name): widget
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         win.add(outer)
 
@@ -125,6 +126,12 @@ class ToolPanel:
             rows.set_margin_bottom(16)
             rows.set_margin_start(12)
             rows.set_margin_end(12)
+            note = registry.TAB_NOTES.get((sec_name, group_name))
+            if note:
+                label = Gtk.Label(label=note, xalign=0)
+                label.set_line_wrap(True)
+                label.set_margin_bottom(10)
+                rows.pack_start(label, False, False, 0)
             widths = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
             row = None
             for tool in tools:
@@ -146,6 +153,7 @@ class ToolPanel:
         self.status_ctx = self.statusbar.get_context_id("status")
         outer.pack_start(self.statusbar, False, False, 0)
 
+        self.follow_order_selection()
         win.show_all()
         GLib.timeout_add(500, self.poll_focus)
 
@@ -225,11 +233,38 @@ class ToolPanel:
                                    else widget.get_value)
             widget.set_tooltip_text(s.label)
             row.pack_start(widget, False, False, 0)
+            self.setting_widgets[(tool.key, s.name)] = widget
+            if s.enable_when:
+                self.enable_only_when(widget, combos[s.enable_when[0]], s.enable_when[1])
             if s.show_when:
                 self.show_only_when(widget, combos[s.show_when[0]], s.show_when[1])
 
         button.connect("clicked", lambda _b: self.run(tool, readers))
         return row
+
+    @staticmethod
+    def enable_only_when(widget, combo, values):
+        """Gray widget out unless combo's value is one of values."""
+        def sync(_c=None):
+            widget.set_sensitive(combo.get_active_id() in values)
+        combo.connect("changed", sync)
+        sync()
+
+    def follow_order_selection(self):
+        """Add's position takes the highest stitch order number selected in
+        Groups > Stitch Order."""
+        spin = self.setting_widgets.get(('order_add', 'position'))
+        groups = getattr(self, 'groups', None)
+        if spin is None or groups is None:
+            return
+
+        def changed(_sel):
+            numbers = [groups.stitch_order.index(i) + 1
+                       for kind, item_id, _ in groups.selected_rows() if kind in ('order-object', 'section')
+                       for i in groups.members(kind, item_id) if i in groups.stitch_order]
+            if numbers:
+                spin.set_value(max(numbers))
+        groups.tree.get_selection().connect("changed", changed)
 
     @staticmethod
     def show_only_when(widget, combo, values):

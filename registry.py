@@ -47,10 +47,11 @@ class Setting:
     """One value the user sets on the panel before running a tool.
     kind: 'float', 'int', 'choice' (choices = [(value, label), ...]) or 'bool' (a checkbox).
     show_when: (setting name, values) to show it only while that choice
-    setting is one of those values."""
+    setting is one of those values. enable_when: the same, but the setting
+    stays visible and is grayed out instead."""
 
     def __init__(self, name, label, kind, default, low=None, high=None,
-                 step=1.0, digits=0, choices=None, show_when=None, remember=False):
+                 step=1.0, digits=0, choices=None, show_when=None, remember=False, enable_when=None):
         self.name = name
         self.label = label
         self.kind = kind
@@ -61,6 +62,7 @@ class Setting:
         self.digits = digits
         self.choices = choices or []
         self.show_when = show_when
+        self.enable_when = enable_when
         self.remember = remember   # the panel keeps the last value between sessions
 
 
@@ -209,26 +211,22 @@ LAYOUT = [
                  'can be followed by eye. Changes the path; for looking, not for sewing.'),
     ]),
     ('Embroidery', 'Stitch Order', [
-        _order('order_add', 'Add to Stitch Order', 'add',
+        _order('order_add', 'Add', 'add',
                settings=[Setting('sel_order', 'Selection order', 'choice', 'document', choices=[
-                   ('document', 'Document order'), ('click', 'Click order')], remember=True)],
-               tip='Select objects or groups. Gives them the next numbers in the stitch order, '
-                   'in document order or in the order you clicked them (the dropdown). '
-                   'Nothing is moved in the layers.'),
-        _order('order_insert', 'Insert into Stitch Order', 'insert',
-               settings=[Setting('place', 'Where', 'choice', 'position', choices=[
+                   ('document', 'Document order'), ('click', 'Click order')], remember=True),
+                         Setting('add_place', 'Where', 'choice', 'end', choices=[
                    ('start', 'Beginning'), ('end', 'End'), ('position', 'Position')]),
-                         Setting('position', 'Position', 'int', 1, 1, 9999)],
-               tip='Puts the selected objects or groups into the stitch order at the beginning, '
-                   'at the end, or at the position number (used for Position), in the order '
-                   'you selected them. Numbers after them move up.'),
-        _order('order_remove', 'Remove from Stitch Order', 'remove',
-               tip='Takes the stitch order number off the selected objects or groups.'),
-        _order('order_clear', 'Clear Stitch Order', 'clear',
+                         Setting('position', 'Position (filled in from the highest number selected '
+                                 'in Groups > Stitch Order)', 'int', 1, 1, 9999,
+                                 enable_when=('add_place', ('position',)))],
+               tip='Select objects or groups. Puts them into the stitch order at the end, at the '
+                   'beginning, or at the position number (Where), in document order or in the '
+                   'order you clicked them. Numbers after them move up. Selecting rows in '
+                   'Groups > Stitch Order fills in the position with the highest number selected. '
+                   'Nothing is moved in the layers.'),
+        _order('order_clear', 'Clear', 'clear',
                tip='Takes the stitch order number off every object in the document.'),
-        _order('order_list', 'List Stitch Order', 'list',
-               tip='Shows every numbered object or group in stitch order.'),
-        _order('order_preview', 'Preview in Stitch Order', 'preview',
+        _order('order_preview', 'Simulate', 'preview',
                tip='Opens the Ink/Stitch simulator on a copy arranged in stitch order. '
                    'Objects without a number are left out. The document is not changed.'),
         _order('order_plan_preview', 'Stitch Plan Preview', 'plan_preview',
@@ -240,7 +238,7 @@ LAYOUT = [
                tip='Nothing needs to be selected. Draws Ink/Stitch\'s stitch plan, sewn in stitch '
                    'order, as a layer beside the canvas or on top of the design (the dropdown), in the chosen render mode (Realistic View (High Quality) by default). '
                    'Objects without a number are left out. Replaces an earlier stitch plan.'),
-        _order('order_export', 'Export in Stitch Order', 'export',
+        _order('order_export', 'Export', 'export',
                settings=[Setting('format', 'Format', 'choice', 'dst', choices=[
                    ('dst', 'DST'), ('exp', 'EXP'), ('jef', 'JEF'), ('pes', 'PES'),
                    ('vp3', 'VP3'), ('xxx', 'XXX'), ('svg', 'SVG')])],
@@ -335,6 +333,9 @@ TOOLBAR_TOOLS = [
              'Cancel there stops the restart.'),
 ]
 TOOLBAR_ICONS = {'restart_inkscape': 'maps-edge-restart-symbolic'}  # icons/ folder, recolored by the theme
+
+# A line of text shown at the top of a tab.
+TAB_NOTES = {('Embroidery', 'Stitch Order'): 'All these buttons apply to the stitch order.'}
 
 
 def all_tools():

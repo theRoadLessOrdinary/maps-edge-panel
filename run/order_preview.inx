@@ -2,7 +2,7 @@
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
 
 	<!-- Written by make_run_inx.py; edit registry.py instead. -->
-	<name>Preview in Stitch Order</name>
+	<name>Simulate</name>
 	<id>maps_edge.panel_run_order_preview</id>
 
 	<effect needs-live-preview="false">
