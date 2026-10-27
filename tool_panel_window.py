@@ -161,7 +161,8 @@ class ToolPanel:
             snap.get('stitch_order', []), None, snap.get('group_order', []),
             snap.get('labels', {}), host_window=self.window, status=self.show_status,
             snapshot_path=EMBED_SNAPSHOT_PATH, group_styles=snap.get('group_styles', {}),
-            item_order=snap.get('item_order', {}))
+            item_order=snap.get('item_order', {}),
+            stitch_sections=snap.get('stitch_sections', {}))
         box = self.groups.widget
         box.set_margin_top(8)
         return box
