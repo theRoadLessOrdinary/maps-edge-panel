@@ -24,6 +24,9 @@ REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_request.json
 REQUEST_MAX_AGE = 15.0  # seconds; an older request is ignored
 RUN_ACTION = 'maps-edge.panel-run.noprefs'
 
+# Last values of settings marked remember=True, kept in the Inkscape config dir.
+REMEMBER_PATH = os.path.join(os.path.dirname(EXTENSIONS_DIR), 'maps_edge_panel_remembered.json')
+
 
 def run_id(key):
     """Extension id of a tool's own dispatcher entry (run/<key>.inx, from
@@ -47,7 +50,7 @@ class Setting:
     setting is one of those values."""
 
     def __init__(self, name, label, kind, default, low=None, high=None,
-                 step=1.0, digits=0, choices=None, show_when=None):
+                 step=1.0, digits=0, choices=None, show_when=None, remember=False):
         self.name = name
         self.label = label
         self.kind = kind
@@ -58,6 +61,7 @@ class Setting:
         self.digits = digits
         self.choices = choices or []
         self.show_when = show_when
+        self.remember = remember   # the panel keeps the last value between sessions
 
 
 class Tool:
@@ -206,8 +210,11 @@ LAYOUT = [
     ]),
     ('Embroidery', 'Stitch Order', [
         _order('order_add', 'Add to Stitch Order', 'add',
-               tip='Select objects or groups in the order they should sew. Gives them the next '
-                   'numbers in the stitch order. Nothing is moved in the layers.'),
+               settings=[Setting('sel_order', 'Selection order', 'choice', 'document', choices=[
+                   ('document', 'Document order'), ('click', 'Click order')], remember=True)],
+               tip='Select objects or groups. Gives them the next numbers in the stitch order, '
+                   'in document order or in the order you clicked them (the dropdown). '
+                   'Nothing is moved in the layers.'),
         _order('order_insert', 'Insert into Stitch Order', 'insert',
                settings=[Setting('place', 'Where', 'choice', 'position', choices=[
                    ('start', 'Beginning'), ('end', 'End'), ('position', 'Position')]),
@@ -241,8 +248,12 @@ LAYOUT = [
     ('General', 'Paths', [
         Tool('split_fill_outline', 'Split Fill and Outline', 'split-fill-outline',
              'split_fill_outline', 'SplitFillOutline',
-             tip='Select objects or groups. Duplicates each one: outline only on the copy on top, '
-                 'fill only on the bottom.'),
+             settings=[Setting('stitchable', 'Mode', 'choice', 'false', choices=[
+                 ('false', 'Split'), ('true', 'Make stitchable')])],
+             tip='Select objects or groups. Split: duplicates each one, outline only on the copy '
+                 'on top, fill only on the bottom. Make stitchable: merges the fills into one '
+                 'shape and joins the visible outlines (cut where shapes in front hide them) into '
+                 'one continuous line on top.'),
         Tool('divide_stroke', 'Divide Stroke', 'divide-stroke-parallel',
              'divide_stroke_parallel', 'DivideStrokeParallel',
              settings=[Setting('n', 'Paths', 'int', 2, 2, 100, 1, 0)],

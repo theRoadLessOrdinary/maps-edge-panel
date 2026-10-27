@@ -25,6 +25,29 @@ warnings.filterwarnings('ignore')  # before the gi import
 os.environ.setdefault('NO_AT_BRIDGE', '1')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _remembered():
+    try:
+        with open(registry.REMEMBER_PATH) as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def remembered_value(tool_key, name, default):
+    return _remembered().get(f'{tool_key}.{name}', default)
+
+
+def remember_value(tool_key, name, value):
+    data = _remembered()
+    data[f'{tool_key}.{name}'] = value
+    try:
+        with open(registry.REMEMBER_PATH, 'w') as f:
+            json.dump(data, f)
+    except OSError:
+        pass
 sys.path.insert(0, HERE)
 # D-Bus helpers are reused from Expanded Groups, not copied.
 sys.path.insert(1, os.path.join(os.path.dirname(HERE), 'ExpandedGroups'))
@@ -162,7 +185,11 @@ class ToolPanel:
                 widget = Gtk.ComboBoxText()
                 for value, text in s.choices:
                     widget.append(value, text)
-                widget.set_active_id(s.default)
+                widget.set_active_id(
+                    remembered_value(tool.key, s.name, s.default) if s.remember else s.default)
+                if s.remember:
+                    widget.connect("changed", lambda w, k=tool.key, n=s.name:
+                                   remember_value(k, n, w.get_active_id()))
                 readers[s.name] = widget.get_active_id
                 combos[s.name] = widget
             else:
