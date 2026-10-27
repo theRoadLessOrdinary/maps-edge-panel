@@ -17,7 +17,7 @@ import tempfile
 EXTENSIONS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # The (section, group) tab that shows the Expanded Groups list instead of buttons.
-GROUPS_TAB = ('General', 'Groups')
+GROUPS_TAB = ('Groups', None)  # a top-level tab holding the Expanded Groups list
 
 # How the panel window hands one request to the dispatcher.
 REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_request.json')
@@ -317,24 +317,28 @@ LAYOUT = [
                  'With Also change stitch order checked, they also get stitch order numbers '
                  'right after the target\'s, in the same order (the target needs a number).'),
     ]),
-    # No buttons: this tab holds the Expanded Groups list itself (GROUPS_TAB).
-    ('General', 'Groups', []),
-    ('General', 'Inkscape', [
-        Tool('restart_inkscape', 'Restart Inkscape', 'restart-inkscape',
-             'restart_inkscape', 'RestartInkscape',
-             tip='Closes Inkscape and opens it again with the active file, for example to '
-                 'load changed extensions. Inkscape still asks about unsaved changes; '
-                 'Cancel there stops the restart.'),
-    ]),
     ('General', 'Export', [
         # No tip: private to the author.
         Tool('borb', 'BORB Exporter...', action='borb-exporter'),
     ]),
+    # No buttons: this top-level tab holds the Expanded Groups list itself (GROUPS_TAB).
+    ('Groups', None, []),
 ]
 
 
+# Shown as icon buttons at the right end of the top tab bar, not in a tab.
+TOOLBAR_TOOLS = [
+    Tool('restart_inkscape', 'Restart Inkscape', 'restart-inkscape',
+         'restart_inkscape', 'RestartInkscape',
+         tip='Restart Inkscape: closes Inkscape and opens it again with the active file, for '
+             'example to load changed extensions. Inkscape still asks about unsaved changes; '
+             'Cancel there stops the restart.'),
+]
+TOOLBAR_ICONS = {'restart_inkscape': 'maps-edge-restart-symbolic'}  # icons/ folder, recolored by the theme
+
+
 def all_tools():
-    return [t for _, _, tools in LAYOUT for t in tools]
+    return [t for _, _, tools in LAYOUT for t in tools] + TOOLBAR_TOOLS
 
 
 def find_tool(key):

@@ -65,7 +65,7 @@ from expanded_groups_dbus import run_extension_live, quiet_stderr, DBUS_NAME, DB
 from expanded_groups_data import EMBED_SNAPSHOT_PATH
 from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.5.0"
+VERSION = "1.6.0"
 
 
 def action_exists(name):
@@ -106,18 +106,19 @@ class ToolPanel:
         sections = Gtk.Notebook()
         sections.set_margin_top(8)
         outer.pack_start(sections, True, True, 0)
+        sections.set_action_widget(self.toolbar(), Gtk.PackType.END)
 
         group_tabs = {}
         for sec_name, group_name, tools in registry.LAYOUT:
+            if (sec_name, group_name) == registry.GROUPS_TAB:
+                sections.append_page(self.groups_list(), Gtk.Label(label=sec_name))
+                continue
             if sec_name not in group_tabs:
                 groups = Gtk.Notebook()
                 groups.set_margin_top(10)
                 group_tabs[sec_name] = groups
                 sections.append_page(groups, Gtk.Label(label=sec_name))
 
-            if (sec_name, group_name) == registry.GROUPS_TAB:
-                group_tabs[sec_name].append_page(self.groups_list(), Gtk.Label(label=group_name))
-                continue
 
             rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             rows.set_margin_top(16)
@@ -163,6 +164,24 @@ class ToolPanel:
             item_order=snap.get('item_order', {}))
         box = self.groups.widget
         box.set_margin_top(8)
+        return box
+
+    def toolbar(self):
+        """Icon buttons for TOOLBAR_TOOLS, at the right end of the top tab bar."""
+        # Our own symbolic icons; GTK draws them in the theme's text color.
+        Gtk.IconTheme.get_default().append_search_path(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons'))
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        box.set_margin_end(6)
+        for tool in registry.TOOLBAR_TOOLS:
+            button = Gtk.Button()
+            button.set_image(Gtk.Image.new_from_icon_name(
+                registry.TOOLBAR_ICONS.get(tool.key, 'system-run'), Gtk.IconSize.LARGE_TOOLBAR))
+            button.set_relief(Gtk.ReliefStyle.NONE)
+            button.set_tooltip_text(tool.tip or tool.label)
+            button.connect("clicked", lambda _b, t=tool: self.run(t, {}))
+            box.pack_start(button, False, False, 0)
+        box.show_all()
         return box
 
     def tool_row(self, tool, widths, row=None):
