@@ -231,6 +231,12 @@ LAYOUT = [
         _order('order_preview', 'Preview in Stitch Order', 'preview',
                tip='Opens the Ink/Stitch simulator on a copy arranged in stitch order. '
                    'Objects without a number are left out. The document is not changed.'),
+        _order('order_plan_preview', 'Stitch Plan Preview', 'plan_preview',
+               settings=[Setting('plan_place', 'Put the plan', 'choice', 'side', choices=[
+                   ('side', 'Beside the canvas'), ('over', 'On top of the design')])],
+               tip='Nothing needs to be selected. Draws Ink/Stitch\'s stitch plan, sewn in stitch '
+                   'order, as a layer beside the canvas or on top of the design (the dropdown). '
+                   'Objects without a number are left out. Replaces an earlier stitch plan.'),
         _order('order_export', 'Export in Stitch Order', 'export',
                settings=[Setting('format', 'Format', 'choice', 'dst', choices=[
                    ('dst', 'DST'), ('exp', 'EXP'), ('jef', 'JEF'), ('pes', 'PES'),
