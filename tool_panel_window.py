@@ -192,6 +192,10 @@ class ToolPanel:
                                    remember_value(k, n, w.get_active_id()))
                 readers[s.name] = widget.get_active_id
                 combos[s.name] = widget
+            elif s.kind == 'bool':
+                widget = Gtk.CheckButton(label=s.label)
+                widget.set_active(bool(s.default))
+                readers[s.name] = widget.get_active
             else:
                 adj = Gtk.Adjustment(value=s.default, lower=s.low, upper=s.high,
                                      step_increment=s.step, page_increment=s.step * 10)

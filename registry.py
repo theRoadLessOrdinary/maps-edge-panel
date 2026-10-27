@@ -45,7 +45,7 @@ PANEL_FOCUS_REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_
 
 class Setting:
     """One value the user sets on the panel before running a tool.
-    kind: 'float', 'int' or 'choice' (choices = [(value, label), ...]).
+    kind: 'float', 'int', 'choice' (choices = [(value, label), ...]) or 'bool' (a checkbox).
     show_when: (setting name, values) to show it only while that choice
     setting is one of those values."""
 
@@ -233,9 +233,12 @@ LAYOUT = [
                    'Objects without a number are left out. The document is not changed.'),
         _order('order_plan_preview', 'Stitch Plan Preview', 'plan_preview',
                settings=[Setting('plan_place', 'Put the plan', 'choice', 'side', choices=[
-                   ('side', 'Beside the canvas'), ('over', 'On top of the design')])],
+                   ('side', 'Beside the canvas'), ('over', 'On top of the design')]),
+                         Setting('render_mode', 'Render mode', 'choice', 'realistic-600', choices=[
+                   ('realistic-600', 'Realistic View (High Quality)'), ('realistic-300', 'Realistic View'),
+                   ('simple', 'Stitch Plan'), ('realistic-vector', 'Realistic Vector (slow)')], remember=True)],
                tip='Nothing needs to be selected. Draws Ink/Stitch\'s stitch plan, sewn in stitch '
-                   'order, as a layer beside the canvas or on top of the design (the dropdown). '
+                   'order, as a layer beside the canvas or on top of the design (the dropdown), in the chosen render mode (Realistic View (High Quality) by default). '
                    'Objects without a number are left out. Replaces an earlier stitch plan.'),
         _order('order_export', 'Export in Stitch Order', 'export',
                settings=[Setting('format', 'Format', 'choice', 'dst', choices=[
@@ -308,8 +311,11 @@ LAYOUT = [
              tip='Opens each selected layer or group, and every layer and group inside it, '
                  'in the Layers and Objects panel.'),
         Tool('move_above', 'Move 1st Selected Above 2nd', LAYERS, 'move_above', 'MoveAbove',
+             settings=[Setting('stitch_order', 'Also change stitch order', 'bool', False)],
              tip='Select two or more layers or objects. The last one clicked is the target. '
-                 'The others are stacked directly above it, in the order they were clicked.'),
+                 'The others are stacked directly above it, in the order they were clicked. '
+                 'With Also change stitch order checked, they also get stitch order numbers '
+                 'right after the target\'s, in the same order (the target needs a number).'),
     ]),
     # No buttons: this tab holds the Expanded Groups list itself (GROUPS_TAB).
     ('General', 'Groups', []),
