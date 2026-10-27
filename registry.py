@@ -329,8 +329,8 @@ TOOLBAR_TOOLS = [
     Tool('restart_inkscape', 'Restart Inkscape', 'restart-inkscape',
          'restart_inkscape', 'RestartInkscape',
          tip='Restart Inkscape: closes Inkscape and opens it again with the active file, for '
-             'example to load changed extensions. Inkscape still asks about unsaved changes; '
-             'Cancel there stops the restart.'),
+             'example to load changed extensions. Saves the file first (a never-saved new '
+             'document gets Save As).'),
 ]
 TOOLBAR_ICONS = {'restart_inkscape': 'maps-edge-restart-symbolic'}  # icons/ folder, recolored by the theme
 
