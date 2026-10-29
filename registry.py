@@ -45,7 +45,8 @@ PANEL_FOCUS_REQUEST_PATH = os.path.join(tempfile.gettempdir(), 'maps_edge_panel_
 
 class Setting:
     """One value the user sets on the panel before running a tool.
-    kind: 'float', 'int', 'choice' (choices = [(value, label), ...]) or 'bool' (a checkbox).
+    kind: 'float', 'int', 'choice' (choices = [(value, label), ...]), 'bool' (a checkbox)
+    or 'color' (a color button; the value is a "#rrggbb" string).
     show_when: (setting name, values) to show it only while that choice
     setting is one of those values. enable_when: the same, but the setting
     stays visible and is grayed out instead."""
@@ -135,6 +136,10 @@ LAYOUT = [
              tip='Select two or more satin columns that meet end to end (rail end nodes on '
                  'top of each other). Joins them into one satin column, keeping all rungs.'),
         Tool('center_line', 'Satin Center Line', SATIN, 'satin_center_line', 'SatinCenterLine',
+             settings=[Setting('color_source', 'Stroke color', 'choice', 'own',
+                               choices=[('own', "Satin's color"), ('pick', 'Picked color')], remember=True),
+                       Setting('stroke_color', 'Color', 'color', '#000000', remember=True,
+                               enable_when=('color_source', ('pick',)))],
              tip='Select one or more satin columns. Draws a line down the middle of each, in '
                  'the satin\'s own style, just under it in the stacking order. The satin is kept.'),
         Tool('normalize', 'Normalize Direction', SATIN, 'normalize_stitch_direction',

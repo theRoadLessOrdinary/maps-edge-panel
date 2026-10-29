@@ -224,6 +224,19 @@ class ToolPanel:
                 widget = Gtk.CheckButton(label=s.label)
                 widget.set_active(bool(s.default))
                 readers[s.name] = widget.get_active
+            elif s.kind == 'color':
+                widget = Gtk.ColorButton()
+                rgba = Gdk.RGBA()
+                rgba.parse(remembered_value(tool.key, s.name, s.default) if s.remember else s.default)
+                widget.set_rgba(rgba)
+
+                def hex_of(w=widget):
+                    c = w.get_rgba()
+                    return '#%02x%02x%02x' % tuple(round(v * 255) for v in (c.red, c.green, c.blue))
+                if s.remember:
+                    widget.connect("color-set", lambda w, k=tool.key, n=s.name, h=hex_of:
+                                   remember_value(k, n, h()))
+                readers[s.name] = hex_of
             else:
                 adj = Gtk.Adjustment(value=s.default, lower=s.low, upper=s.high,
                                      step_increment=s.step, page_increment=s.step * 10)
