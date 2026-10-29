@@ -127,9 +127,9 @@ LAYOUT = [
              tip='Select 2 or 4 open strokes at one crossing. Joins the nearest open ends into '
                  'continuous paths, to change which path carries on into which past the crossing.'),
         Tool('cut_satin', 'Cut Satin', SATIN, 'cut_satin_at_nodes', 'CutSatinAtNodes',
-             tip='Select a satin column plus a cut line or closed shape drawn across it, or '
-                 'select the cut nodes on its rails in the Node tool. Splits the column into '
-                 'separate satin columns at each cut. Or select only a column already in '
+             tip='Select satin column(s) plus a cut line or closed shape drawn across them, or '
+                 'select the cut nodes on their rails in the Node tool. Splits every column it '
+                 'crosses into separate satin columns at each cut. Or select only a column already in '
                  'separate pieces to make each piece its own satin column.'),
         Tool('join_satin', 'Join Satin', SATIN, 'join_satin', 'JoinSatin', beside=True,
              tip='Select two or more satin columns that meet end to end (rail end nodes on '
