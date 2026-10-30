@@ -172,6 +172,11 @@ LAYOUT = [
              tip='Select 2 satin columns at one crossing. Ends the under piece at the over '
                  'piece: its shorter rail is carried along the over piece so both rails end '
                  'together and the satin fills to the tip.'),
+        Tool('reroute_rail', 'Reroute Rail Along Shape', SATIN, 'reroute_rail', 'RerouteRail',
+             tip='Select one closed shape and one or more rails or satin columns. The part of each '
+                 'rail inside the shape is replaced by the shape\'s edge, the shorter way around. '
+                 'A rail end inside the shape is trimmed at the edge. Rungs are left as they are. '
+                 'The shape is deleted, as Difference does.'),
     ]),
     ('Embroidery', 'Stitch Settings', [
         Tool('ties_before', 'Lock Stitches: Before', QUICK, 'ties_before', 'TiesBefore',

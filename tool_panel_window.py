@@ -65,7 +65,15 @@ from expanded_groups_dbus import run_extension_live, quiet_stderr, DBUS_NAME, DB
 from expanded_groups_data import EMBED_SNAPSHOT_PATH
 from expanded_groups_panel import ExpandedGroupsPanel
 
-VERSION = "1.7.0"
+VERSION = "1.7.1"
+
+
+def tab_label(text):
+    """Notebook tab label with room on each side, so tabs don't crowd."""
+    label = Gtk.Label(label=text)
+    label.set_margin_start(10)
+    label.set_margin_end(10)
+    return label
 
 
 def action_exists(name):
@@ -112,13 +120,13 @@ class ToolPanel:
         group_tabs = {}
         for sec_name, group_name, tools in registry.LAYOUT:
             if (sec_name, group_name) == registry.GROUPS_TAB:
-                sections.append_page(self.groups_list(), Gtk.Label(label=sec_name))
+                sections.append_page(self.groups_list(), tab_label(sec_name))
                 continue
             if sec_name not in group_tabs:
                 groups = Gtk.Notebook()
                 groups.set_margin_top(10)
                 group_tabs[sec_name] = groups
-                sections.append_page(groups, Gtk.Label(label=sec_name))
+                sections.append_page(groups, tab_label(sec_name))
 
 
             rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -147,7 +155,7 @@ class ToolPanel:
             scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             scroll.set_overlay_scrolling(False)
             scroll.add(rows)
-            group_tabs[sec_name].append_page(scroll, Gtk.Label(label=group_name))
+            group_tabs[sec_name].append_page(scroll, tab_label(group_name))
 
         self.statusbar = Gtk.Statusbar()
         self.status_ctx = self.statusbar.get_context_id("status")
