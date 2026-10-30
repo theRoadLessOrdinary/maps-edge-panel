@@ -7,15 +7,16 @@ Menu: **Extensions > Map's Edge Tools > Tool Panel** (extension ID `maps_edge.to
 ## Using it
 
 - Pick **Tool Panel** from the menu once. The window opens and Inkscape stays usable. Picking it again brings the open window to the front.
-- Two tabs across the top, **Embroidery** and **General**, each hold a tab per tool group, matching the menu.
+- Three tabs across the top: **Embroidery** and **General** each hold a tab per tool group, matching the menu, and **Groups** holds the Expanded Groups list.
 - Each button has a tooltip saying what to select and what the button does.
+- **Embroidery > Satin** has a button for each satin tool, including **Reroute Rail Along Shape** (route a rail around a closed shape instead of through it).
 - A tool that has settings shows them on the same row as its button.
 - A setting needed by only some of a tool's modes is shown only while one of those modes is chosen (Ladder Rungs shows Degrees only for Angle).
 - While a tool runs, the status bar shows "Running: ...". The panel waits however long the tool takes.
 - Each run is one step in Edit > Undo History, named after the tool.
 - A button runs its tool on the current document and selection, as one undo step, the same as picking the tool from the menu.
 - Tools that open a window of their own are opened through Inkscape, the same as from the menu.
-- **General > Groups** holds the Expanded Groups list itself, with the same toolbar, clicks, drag and drop and right-click menu as the Expanded Groups window. It reads the document's groups when the panel opens. Its Refresh button reads them again, for example after switching documents or after editing groups some other way.
+- **Groups** holds the Expanded Groups list itself, with the same toolbar, clicks, drag and drop and right-click menu as the Expanded Groups window. It reads the document's groups when the panel opens. Its Refresh button reads them again, for example after switching documents or after editing groups some other way.
 
 The panel has no live preview. The menu entries keep theirs.
 
